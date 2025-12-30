@@ -66,11 +66,11 @@ function interpolate!(out1, out2, W::VirtualBrownianTree, u, p, t)
         W.dZ !== nothing && copyto!(out2, timeseries2[i - 1])
     else
         if W.dZ !== nothing
-            search_VBT!(out1, out2, t, seeds[i - 1], ts[i - 1], ts[i], timeseries[i - 1],
+            search_VBT!(out1, out2, t, W.seeds[i - 1], ts[i - 1], ts[i], timeseries[i - 1],
                 timeseries[i],
                 timeseries2[i - 1], timeseries2[i], W, W.rng)
         else
-            search_VBT!(out1, out2, t, seeds[i - 1], ts[i - 1], ts[i], timeseries[i - 1],
+            search_VBT!(out1, out2, t, W.seeds[i - 1], ts[i - 1], ts[i], timeseries[i - 1],
                 timeseries[i],
                 nothing, nothing, W, W.rng)
         end
@@ -252,9 +252,8 @@ function search_VBT(t, seed, t0, t1, W0, W1, Z0, Z1, W::VirtualBrownianTree,
 
     # create a buffer
     W0tmp, W1tmp = copy(W0), copy(W1)
-    if Z0 !== nothing
-        Z0tmp, Z1tmp = copy(Z0), copy(Z1)
-    end
+    Z0tmp = Z0 !== nothing ? copy(Z0) : nothing
+    Z1tmp = Z0 !== nothing ? copy(Z1) : nothing
 
     while (abs(t - tmid) > W.atol && depth < W.search_depth)
         depth += 1

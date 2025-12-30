@@ -120,9 +120,6 @@ end
             end
         else
             W0, Wh = W.W[i - 1], W.W[i]
-            if W.Z !== nothing
-                Z0, Zh = W.Z[i - 1], W.Z[i]
-            end
             h = W.t[i] - W.t[i - 1]
             q = (t - W.t[i - 1]) / h
             if isinplace(W)
@@ -134,6 +131,7 @@ end
                     @. new_curW += W0
                 end
                 if W.Z !== nothing
+                    Z0, Zh = W.Z[i - 1], W.Z[i]
                     new_curZ = similar(W.dZ)
                     W.bridge(new_curZ, W, Z0, Zh, q, h, u, p, t, W.rng)
                     if iscontinuous(W)
@@ -155,6 +153,7 @@ end
                     new_curW += W0
                 end
                 if W.Z !== nothing
+                    Z0, Zh = W.Z[i - 1], W.Z[i]
                     new_curZ = W.bridge(W, Z0, Zh, q, h, u, p, t, W.rng)
                     if iscontinuous(W)
                         new_curZ += (1 - q) * Z0
@@ -206,14 +205,12 @@ end
             end
         else
             W0, Wh = W.W[i - 1], W.W[i]
-            if W.Z !== nothing
-                Z0, Zh = W.Z[i - 1], W.Z[i]
-            end
             h = W.t[i] - W.t[i - 1]
             q = (t - W.t[i - 1]) / h
             W.bridge(out1, W, W0, Wh, q, h, u, p, t, W.rng)
             out1 .+= (1 - q) * W0
             if W.Z !== nothing
+                Z0, Zh = W.Z[i - 1], W.Z[i]
                 W.bridge(out2, W, Z0, Zh, q, h, u, p, t, W.rng)
                 out2 .+= (1 - q) * Z0
             end
@@ -280,11 +277,9 @@ function generate_boxes1(densf, Δr, Δa, Δz, rM, aM, offset = nothing, scale =
         for (j, a) in enumerate(as[1:(end - 1)])
             # height of the box
             z = Δz
-            if offset !== nothing
-                indx1 = (i - 1) * scale + one(scale)
-                indx2 = (j - 1) * scale + one(scale)
-                z += offset[indx1, indx2]
-            end
+            indx1 = (i - 1) * scale + one(scale)
+            indx2 = (j - 1) * scale + one(scale)
+            z += offset[indx1, indx2]
 
             counter = 0
 
@@ -301,9 +296,7 @@ function generate_boxes1(densf, Δr, Δa, Δz, rM, aM, offset = nothing, scale =
                 push!(probability, counter * 2 * Δr * Δa * Δz)
             end
 
-            if offset !== nothing
-                offset[indx1:(indx1 + (scale - one(scale))), indx2:(indx2 + (scale - one(scale)))] .= z
-            end
+            offset[indx1:(indx1 + (scale - one(scale))), indx2:(indx2 + (scale - one(scale)))] .= z
         end
     end
     return boxes, probability, offset
@@ -349,11 +342,9 @@ function generate_boxes3(densf, Δr, Δa, Δz, rM, aM, offset = nothing, scale =
         for (j, a) in enumerate(as[1:(end - 1)])
             # height of the box
             z = Δz
-            if offset !== nothing
-                indx1 = (i - 1) * scale + one(scale)
-                indx2 = (j - 1) * scale + one(scale)
-                z += offset[indx1, indx2]
-            end
+            indx1 = (i - 1) * scale + one(scale)
+            indx2 = (j - 1) * scale + one(scale)
+            z += offset[indx1, indx2]
             # check for complete inclusion of box in volume
             while (z <= densf(r, a) && z <= densf(r + Δr, a) && z <= densf(r, a + Δa) &&
                    z <= densf(r + Δr, a + Δa))
@@ -365,9 +356,7 @@ function generate_boxes3(densf, Δr, Δa, Δz, rM, aM, offset = nothing, scale =
                 z += Δz
             end
             z -= Δz
-            if offset !== nothing
-                offset[indx1:(indx1 + (scale - one(scale))), indx2:(indx2 + (scale - one(scale)))] .= z
-            end
+            offset[indx1:(indx1 + (scale - one(scale))), indx2:(indx2 + (scale - one(scale)))] .= z
         end
     end
     return boxes, probability, offset

@@ -488,16 +488,10 @@ end
         else
             if reverse
                 W0, Wh = W.W[i], W.W[i - 1] - W.W[i]
-                if W.Z !== nothing
-                    Z0, Zh = W.Z[i + 1], W.Z[i]
-                end
                 h = W.t[i - 1] - W.t[i]
                 q = (t - W.t[i]) / h
             else
                 W0, Wh = W.W[i - 1], W.W[i] - W.W[i - 1]
-                if W.Z !== nothing
-                    Z0, Zh = W.Z[i - 1], W.Z[i]
-                end
                 h = W.t[i] - W.t[i - 1]
                 q = (t - W.t[i - 1]) / h
             end
@@ -511,6 +505,11 @@ end
                 @. new_curW += W0
                 #end
                 if W.Z !== nothing
+                    Z0, Zh = if reverse
+                        W.Z[i + 1], W.Z[i]
+                    else
+                        W.Z[i - 1], W.Z[i]
+                    end
                     new_curZ = similar(W.dZ)
                     W.bridge(new_curZ, W, Z0, Zh, q, h, u, p, W.t[i - 1], W.rng)
                     #if iscontinuous(W)
@@ -532,6 +531,11 @@ end
                 new_curW += W0
                 #end
                 if W.Z !== nothing
+                    Z0, Zh = if reverse
+                        W.Z[i + 1], W.Z[i]
+                    else
+                        W.Z[i - 1], W.Z[i]
+                    end
                     new_curZ = W.bridge(W.dZ, W, Z0, Zh, q, h, u, p, W.t[i - 1], W.rng)
                     #if iscontinuous(W)
                     #    new_curZ += (1 - q) * Z0
@@ -607,16 +611,10 @@ end
         else
             if reverse
                 W0, Wh = W.W[i], W.W[i - 1]
-                if W.Z !== nothing
-                    Z0, Zh = W.Z[i], W.Z[i - 1]
-                end
                 h = W.t[i - 1] - W.t[i]
                 q = (t - W.t[i]) / h
             else
                 W0, Wh = W.W[i - 1], W.W[i]
-                if W.Z !== nothing
-                    Z0, Zh = W.Z[i - 1], W.Z[i]
-                end
                 h = W.t[i] - W.t[i - 1]
                 q = (t - W.t[i - 1]) / h
             end
@@ -626,6 +624,11 @@ end
             out1 .+= (1 - q) * W0
 
             if W.Z !== nothing
+                Z0, Zh = if reverse
+                    W.Z[i], W.Z[i - 1]
+                else
+                    W.Z[i - 1], W.Z[i]
+                end
                 W.bridge(out2, W, Z0, Zh, q, h, u, p, t, W.rng)
                 out2 .+= (1 - q) * Z0
             end
@@ -671,3 +674,5 @@ end
 =#
 
 iscontinuous(W::NoiseProcess) = W.continuous
+iscontinuous(W::SimpleNoiseProcess) = true
+iscontinuous(W::BoxWedgeTail) = true

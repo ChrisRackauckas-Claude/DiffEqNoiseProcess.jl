@@ -118,9 +118,6 @@ end
             end
         else
             W0, Wh = W.W[i - 1], W.W[i]
-            if W.Z !== nothing
-                Z0, Zh = W.Z[i - 1], W.Z[i]
-            end
             h = W.t[i] - W.t[i - 1]
             q = (t - W.t[i - 1]) / h
             if isinplace(W)
@@ -132,6 +129,7 @@ end
                     @. new_curW += W0
                 end
                 if W.Z !== nothing
+                    Z0, Zh = W.Z[i - 1], W.Z[i]
                     new_curZ = similar(W.dZ)
                     W.bridge(new_curZ, W, Z0, Zh, q, h, u, p, t, W.rng)
                     if iscontinuous(W)
@@ -153,6 +151,7 @@ end
                     new_curW += W0
                 end
                 if W.Z !== nothing
+                    Z0, Zh = W.Z[i - 1], W.Z[i]
                     new_curZ = W.bridge(W.dZ, W, Z0, Zh, q, h, u, p, t, W.rng)
                     if iscontinuous(W)
                         new_curZ += (1 - q) * Z0
@@ -204,14 +203,12 @@ end
             end
         else
             W0, Wh = W.W[i - 1], W.W[i]
-            if W.Z !== nothing
-                Z0, Zh = W.Z[i - 1], W.Z[i]
-            end
             h = W.t[i] - W.t[i - 1]
             q = (t - W.t[i - 1]) / h
             W.bridge(out1, W, W0, Wh, q, h, u, p, t, W.rng)
             out1 .+= (1 - q) * W0
             if W.Z !== nothing
+                Z0, Zh = W.Z[i - 1], W.Z[i]
                 W.bridge(out2, W, Z0, Zh, q, h, u, p, t, W.rng)
                 out2 .+= (1 - q) * Z0
             end

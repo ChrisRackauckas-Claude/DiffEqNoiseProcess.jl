@@ -29,11 +29,20 @@ function Base.copy!(Wnew::T, W::T) where {T <: AbstractNoiseProcess}
         end
     end
     # field u should be an alias for field W:
-    if hasfield(typeof(W), :u)
-        Wnew.u = Wnew.W
-    end
+    _copy_u_field!(Wnew)
     Wnew
 end
+
+# Helper function to set u field for types that have it
+# This uses dispatch to handle the field access safely for static analysis
+_copy_u_field!(W::NoiseProcess) = (W.u = W.W; nothing)
+_copy_u_field!(W::SimpleNoiseProcess) = (W.u = W.W; nothing)
+_copy_u_field!(W::NoiseWrapper) = (W.u = W.W; nothing)
+_copy_u_field!(W::NoiseGrid) = (W.u = W.W; nothing)
+_copy_u_field!(W::NoiseApproximation) = (W.u = W.W; nothing)
+_copy_u_field!(W::VirtualBrownianTree) = (W.u = W.W; nothing)
+_copy_u_field!(W::BoxWedgeTail) = (W.u = W.W; nothing)
+_copy_u_field!(::AbstractNoiseProcess) = nothing
 
 function Base.copy(W::NoiseProcess)
     Wnew = NoiseProcess{isinplace(W)}(W.curt, W.curW, W.curZ, W.dist, W.bridge;
