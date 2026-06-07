@@ -51,13 +51,18 @@ function DiffEqBase.__solve(
         # so the solve took a full extra step and stopped past `tspan[2]`.
         endtol = tType <: AbstractFloat ?
             100 * eps(tType(max(abs(prob.tspan[2]), abs(W.curt)))) : zero(W.curt)
+        # Only processes that record a timeseries by appending to `W.t` (those carrying a
+        # `save_everystep` field) need the recorded endpoint snapped onto `tspan[2]`.
+        # Processes like `VirtualBrownianTree` keep `W.t` as a fixed grid and have no such
+        # field, so accessing it would error.
+        snap_endpoint = hasproperty(W, :save_everystep) && W.save_everystep
         if tType <: AbstractFloat && abs(prob.tspan[2] - (W.curt + W.dt)) <= endtol
             # The prepared step lands on `tspan[2]` up to floating point drift. Take it as
             # usual but snap the recorded endpoint exactly onto `tspan[2]` so the solution
             # neither overshoots nor stops just short of the requested final time.
             accept_step!(W, dt, nothing, nothing)
             W.curt = prob.tspan[2]
-            W.save_everystep && (W.t[end] = prob.tspan[2])
+            snap_endpoint && (W.t[end] = prob.tspan[2])
         elseif tType <: AbstractFloat && W.curt + W.dt > prob.tspan[2] + endtol
             # The prepared step would overshoot `tspan[2]` by more than rounding. Recompute
             # it at exactly the remaining width so the solution ends on `tspan[2]`.
@@ -65,7 +70,7 @@ function DiffEqBase.__solve(
             calculate_step!(W, dtcorrect, nothing, nothing)
             accept_step!(W, dtcorrect, nothing, nothing)
             W.curt = prob.tspan[2]
-            W.save_everystep && (W.t[end] = prob.tspan[2])
+            snap_endpoint && (W.t[end] = prob.tspan[2])
         else
             accept_step!(W, dt, nothing, nothing)
         end
